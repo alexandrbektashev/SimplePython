@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import codecs
 
 URL_MAIN_PAGE = "http://wikigrib.ru/vidy/"
 URL_GOOD = "http://wikigrib.ru/vidy/sedobnye-griby/"
@@ -15,91 +16,42 @@ PAGES_OF_POISONOUS = 9
 
 URLPART_PAGE_NUMBER = "page/"
 
+FILENAME_MUSH_INFO = "mushroom_all_spieces.txt"
+
 mush_info = {}
-print("bad")
-page = URL_BAD
-i = 2
-while i < PAGES_OF_BAD :
-    r = requests.get(page)
-    c = r.content
-    soup = BeautifulSoup(c, "html.parser")
-    content_list = soup.findAll('div', attrs= {'class': 'catcont-list__info'})
-    for content in content_list :
-        title_ru = content.find('a', attrs= {'class': 'catcont-list__title'}).text
-        title_lat = content.find('span').text
-        link = content.find('a', attrs= {'class': 'catcont-list__title'})['href']
-        mush_info[title_ru] = "NTRL", title_lat, link
-    page = URL_BAD + URLPART_PAGE_NUMBER + i.__str__() + "/"
-    i += 1
-print("good")
 
-page = URL_POISONOUS
-i = 2
-while i < PAGES_OF_POISONOUS :
-    r = requests.get(page)
-    c = r.content
-    soup = BeautifulSoup(c, "html.parser")
-    content_list = soup.findAll('div', attrs= {'class': 'catcont-list__info'})
-    for content in content_list :
-        title_ru = content.find('a', attrs= {'class': 'catcont-list__title'}).text
-        title_lat = content.find('span').text
-        link = content.find('a', attrs= {'class': 'catcont-list__title'})['href']
-        mush_info[title_ru] = "PSNS", title_lat, link
-    page = URL_POISONOUS + URLPART_PAGE_NUMBER + i.__str__() + "/"
-    i += 1
-print("psch")
+def scrap_chapter(url, page_num, title) :
+    page = url
+    i = 2
+    while True:
+        r = requests.get(page)
+        c = r.content
+        soup = BeautifulSoup(c, "html.parser")
+        content_list = soup.findAll('div', attrs={'class': 'catcont-list__info'})
+        for content in content_list:
+            title_ru = content.find('a', attrs={'class': 'catcont-list__title'}).text
+            title_lat = content.find('span').text
+            link = content.find('a', attrs={'class': 'catcont-list__title'})['href']
+            mush_info[title_ru] = title , title_lat, link
+        if i > page_num: break
+        page = url + URLPART_PAGE_NUMBER + i.__str__() + "/"
+        i += 1
 
-page = URL_PSYCHOACTIVE
-i = 2
-while i < PAGES_OF_PSYCHO :
-    r = requests.get(page)
-    c = r.content
-    soup = BeautifulSoup(c, "html.parser")
-    content_list = soup.findAll('div', attrs= {'class': 'catcont-list__info'})
-    for content in content_list :
-        title_ru = content.find('a', attrs= {'class': 'catcont-list__title'}).text
-        title_lat = content.find('span').text
-        link = content.find('a', attrs= {'class': 'catcont-list__title'})['href']
-        mush_info[title_ru] = "PSCH", title_lat, link
-    page = URL_PSYCHOACTIVE + URLPART_PAGE_NUMBER + i.__str__() + "/"
-    i += 1
-
-page = URL_GOOD
-
-i = 2
-while i < PAGES_OF_GOOD :
-    r = requests.get(page)
-    c = r.content
-    soup = BeautifulSoup(c, "html.parser")
-    content_list = soup.findAll('div', attrs= {'class': 'catcont-list__info'})
-    for content in content_list :
-        title_ru = content.find('a', attrs= {'class': 'catcont-list__title'}).text
-        title_lat = content.find('span').text
-        link = content.find('a', attrs= {'class': 'catcont-list__title'})['href']
-        mush_info[title_ru] = "ACPT", title_lat, link
-    page = URL_GOOD + URLPART_PAGE_NUMBER + i.__str__() + "/"
-    i += 1
-
-page = URL_CONDITIONAL
-i = 2
-while i < PAGES_OF_CONDITIONAL :
-    r = requests.get(page)
-    c = r.content
-    soup = BeautifulSoup(c, "html.parser")
-    content_list = soup.findAll('div', attrs= {'class': 'catcont-list__info'})
-    for content in content_list :
-        title_ru = content.find('a', attrs= {'class': 'catcont-list__title'}).text
-        title_lat = content.find('span').text
-        link = content.find('a', attrs= {'class': 'catcont-list__title'})['href']
-        mush_info[title_ru] = "CNDT", title_lat, link
-    page = URL_CONDITIONAL + URLPART_PAGE_NUMBER + i.__str__() + "/"
-    i += 1
+scrap_chapter(URL_BAD, PAGES_OF_BAD, "NTRL")
+scrap_chapter(URL_PSYCHOACTIVE, PAGES_OF_PSYCHO, "PSCH")
+scrap_chapter(URL_POISONOUS, PAGES_OF_POISONOUS, "PSNS")
+scrap_chapter(URL_GOOD, PAGES_OF_GOOD, "ACPT")
+scrap_chapter(URL_CONDITIONAL, PAGES_OF_CONDITIONAL, "CNDT")
 
 
-
+i = 1
+f = open(FILENAME_MUSH_INFO, 'wb')
 for key in mush_info :
-    print(key + " " + mush_info[key][0]+ " " + mush_info[key][1] + " " + mush_info[key][2])
-
+    grib = i.__str__()+ "#" + mush_info[key][0] + "#" + key + "#" + mush_info[key][1]+ "#" +  mush_info[key][2] +'\n'
+    print(grib)
+    f.write(grib.encode('UTF-8'))
+    i += 1
+f.close()
 
 #<span lang="la" xml:lang="la">Albatrellus confluens</span>
 #<div class="catcont-list__info">
